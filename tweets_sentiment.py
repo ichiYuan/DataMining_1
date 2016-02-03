@@ -5,15 +5,32 @@ import MapReduce
 
 mr = MapReduce.MapReduce()
 scores = {}
-
+counter = 1
 
 def mapper(each_tweet):
     # Mapper code goes in here
-
+    text = each_tweet['text']
+    text = text.encode('utf-8')
+    text = re.sub('https?://\S+', '', text)
+    text = re.sub('[#@]\S+', '', text)
+    text = text.translate(None,string.punctuation).lower()
+    keys = text.split()
+    global counter
+    flag = False
+    for k in keys:
+    	if k in scores:
+    		flag = True
+    		mr.emit_intermediate(counter, scores[k])
+    if not flag:
+    	mr.emit_intermediate(counter,0)
+    counter += 1
 
 def reducer(key, list_of_values):
-
     # Reducer code goes in here
+    total = 0
+    for v in list_of_values:
+    	total += v
+    mr.emit((key, total))
 
 
 if __name__ == '__main__':
